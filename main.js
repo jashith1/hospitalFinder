@@ -32,15 +32,22 @@ const map = new Map({
 //get user location
 let locationFail = false;
 function getUserLocation() {
+	if (!document.querySelector('#status img')) {
+		const image = document.createElement('img');
+		image.src = 'https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif';
+		image.width = 25;
+		image.height = 25;
+		statusDiv.append(image);
+	}
 	if (document.querySelector('#status button')) document.querySelector('#status button').remove();
-	statusText.innerText = 'finding location...';
-	navigator.geolocation.getCurrentPosition(getLocationSuccess, getLocationFail, { enableHighAccuracy: false, maximumAge: 0, timeout: 10000 });
+	statusText.innerText = 'finding location, please be patient this could take up to 30 seconds.';
+	navigator.geolocation.getCurrentPosition(getLocationSuccess, getLocationFail, { enableHighAccuracy: false, maximumAge: 360000, timeout: 10000 });
 }
 
 function getLocationSuccess(position) {
+	if (document.querySelector('#status img')) document.querySelector('#status img').remove();
 	statusText.innerText = 'found location';
 	// statusDiv.innerHTML = '';
-	console.log('success');
 	console.log(position);
 
 	//zoom in and center to user's coords
@@ -62,7 +69,7 @@ function getLocationFail(err) {
 		locationFail = true;
 		setTimeout(getUserLocation, 1000);
 	} else {
-		alert('location get failed');
+		alert('failed to get location, please refresh and try again');
 	}
 }
 
@@ -86,7 +93,6 @@ function getHospitalLocation(userLatitude, userLongitude, radius, maximum, incre
 	fetch(url)
 		.then((res) => res.json())
 		.then((res) => {
-			console.log(res.elements.length);
 			let calculatedNodes = 0;
 			let neededNodes = [];
 			for (var i = 0; i < res.elements.length; i++) {
