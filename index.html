@@ -5,12 +5,17 @@
 		<link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
 		<link rel="stylesheet" href="style.css" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script type="module" src="./main.js"></script>
 		<title>Using OpenLayers with Vite</title>
 	</head>
 	<body>
+		<div id="status">
+			<button>Get Location</button>
+			<h3>waiting to start</h3>
+		</div>
 		<div class="mapcontainer">
 			<div id="map" class="map"></div>
 		</div>
-		<script type="module" src="./main.js"></script>
+		<div id="featureInfo"></div>
 	</body>
 </html>

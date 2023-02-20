@@ -4,7 +4,25 @@ html,
 body {
 	margin: 0;
 	height: 100%;
+	padding: 0;
 }
+
+#status {
+	position: relative;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+#featureInfo {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	/* height: 150px; */
+	background-color: lightgreen;
+}
+
 #map {
 	position: absolute;
 	top: 0;
@@ -12,10 +30,6 @@ body {
 	width: 100%;
 }
 
-.map {
-	width: 100%;
-	height: 400px;
-}
 .mapcontainer {
 	position: relative;
 	margin-bottom: 20px;
@@ -36,4 +50,11 @@ body {
 .map .ol-attribution.ol-uncollapsible {
 	bottom: 30px;
 	right: 50px;
+}
+
+.popup {
+	background-color: #ccc;
+	color: #fff;
+	border-radius: 5px;
+	padding: 10px;
 }

@@ -8,10 +8,11 @@ import Point from 'ol/geom/Point.js';
 import { Icon, Style } from 'ol/style.js';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
+import Overlay from 'ol/Overlay';
 
-//start searching for user's location
-getUserLocation();
-
+document.querySelector('#status button').onclick = getUserLocation;
+const statusDiv = document.getElementById('status');
+const statusText = document.querySelector('#status h3');
 //plot the map (full world)
 const view = new View({
 	center: [0, 0],
@@ -31,11 +32,14 @@ const map = new Map({
 //get user location
 let locationFail = false;
 function getUserLocation() {
-	console.log('trying to get location');
-	navigator.geolocation.getCurrentPosition(getLocationSuccess, getLocationFail, { enableHighAccuracy: false, maximumAge: 600000, timeout: 10000 });
+	if (document.querySelector('#status button')) document.querySelector('#status button').remove();
+	statusText.innerText = 'finding location...';
+	navigator.geolocation.getCurrentPosition(getLocationSuccess, getLocationFail, { enableHighAccuracy: false, maximumAge: 0, timeout: 10000 });
 }
 
 function getLocationSuccess(position) {
+	statusText.innerText = 'found location';
+	// statusDiv.innerHTML = '';
 	console.log('success');
 	console.log(position);
 
@@ -45,10 +49,12 @@ function getLocationSuccess(position) {
 	plotPoints([{ lon: position.coords.longitude, lat: position.coords.latitude }], true);
 
 	//find nearest hospitals to the user
+	statusText.innerText = 'finding hospitals...';
 	getHospitalLocation(position.coords.latitude, position.coords.longitude, 3500, 350000, 3500, 5);
 }
 
 function getLocationFail(err) {
+	statusText.innerText = 'failed to find location';
 	console.log('fail');
 	console.warn(err);
 	if (err.code === err.TIMEOUT && !locationFail) {
@@ -76,7 +82,6 @@ function getHospitalLocation(userLatitude, userLongitude, radius, maximum, incre
 	out;`;
 
 	const url = `https://overpass-api.de/api/interpreter?data=${query}`;
-	console.log(url);
 
 	fetch(url)
 		.then((res) => res.json())
@@ -121,6 +126,8 @@ function findHospitalDistance(lat1, lng1, lat2, lng2) {
 
 //plot hospital points
 function plotPoints(locations, userLocation) {
+	statusText.innerText = 'plotting hospitals...';
+
 	locations.forEach((location) => {
 		const markerStyle = new Style({
 			image: new Icon({
@@ -146,13 +153,45 @@ function plotPoints(locations, userLocation) {
 		});
 
 		map.addLayer(vectorLayer);
-	});
-	map.on('click', (evt) => {
-		const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => {
-			return feature;
+		if (userLocation) return;
+
+		const locationPopup = new Overlay({
+			element: document.createElement('div'),
+			autoPan: true,
+			autoPanAnimation: {
+				duration: 250,
+			},
+			offset: [10, -10],
 		});
-		if (feature) {
-			console.log(feature);
+
+		map.addOverlay(locationPopup);
+
+		map.on('pointermove', getFeatureInfo);
+		map.on('click', getFeatureInfo);
+
+		function getFeatureInfo(event) {
+			const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f);
+			let result = '';
+			if (feature === marker) {
+				Object.keys(feature.values_.tags).forEach((tag) => {
+					result += tag + ': ' + feature.values_.tags[tag] + '\n';
+				});
+				const popupContent = document.createElement('div');
+				popupContent.classList.add(event.type === 'pointermove' ? 'popup' : 'hospital-info');
+				popupContent.innerText = result;
+				if (event.type === 'pointermove') {
+					const coordinate = event.coordinate;
+					locationPopup.setElement(popupContent);
+					locationPopup.setPosition(coordinate);
+				} else if (event.type === 'click') {
+					const featureInfoDiv = document.getElementById('featureInfo');
+					featureInfoDiv.innerHTML = '';
+					featureInfoDiv.appendChild(popupContent);
+				}
+			} else {
+				locationPopup.setElement(document.createElement('div'));
+			}
 		}
 	});
+	statusText.innerText = 'Done!';
 }
